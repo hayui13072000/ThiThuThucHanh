@@ -55,10 +55,10 @@ public class ListApi extends AppCompatActivity {
         tvAge=findViewById(R.id.tvAge);
         listView = findViewById(R.id.listView);
 
-//        listUser=GetArrayJson(url);
-//        System.out.println(listUser);
-//        UserAdater userAdater=new UserAdater(getApplicationContext(), listUser);
-//        listView.setAdapter(userAdater);
+        listUser=GetArrayJson(url);
+        //System.out.println(listUser);
+        UserAdater userAdater=new UserAdater(getApplicationContext(), listUser);
+        listView.setAdapter(userAdater);
 
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
