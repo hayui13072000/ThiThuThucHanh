@@ -1,7 +1,10 @@
 package com.example.thithuthuchanh;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -30,11 +33,11 @@ import java.util.Map;
 
 public class ListApi extends AppCompatActivity {
 
-    EditText txtName, txtAge, txtClass, txtId;
-    Button btnAdd, btnUpdate;
-    TextView tvName, tvId, tvClass, tvAge;
-    ArrayList<User> listUser;
-    ListView listView;
+    private EditText txtName, txtAge, txtClass, txtId;
+    private Button btnAdd, btnUpdate;
+    private ArrayList<User> listUser=new ArrayList<User>();
+    private UserAdater adapter;
+    private RecyclerView rclView;
 
     String url = "https://60ada4a180a61f0017331601.mockapi.io/users";
 
@@ -49,21 +52,19 @@ public class ListApi extends AppCompatActivity {
         txtClass=findViewById(R.id.txtClass);
         btnAdd=findViewById(R.id.btnAdd);
         btnUpdate=findViewById(R.id.btnUpdate);
-        tvName=findViewById(R.id.tvName);
-        tvId=findViewById(R.id.tvId);
-        tvClass=findViewById(R.id.tvClass);
-        tvAge=findViewById(R.id.tvAge);
-        listView = findViewById(R.id.listView);
+        rclView = findViewById(R.id.rclView);
+        //txtId.setEnabled(false);
 
-//        listUser=GetArrayJson(url);
-//        //System.out.println(listUser);
-//        UserAdater userAdater=new UserAdater(getApplicationContext(), listUser);
-//        listView.setAdapter(userAdater);
+
+        GetData(url);
 
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 PortApi(url, txtName.getText().toString().trim(), Integer.parseInt(txtAge.getText().toString().trim()), txtClass.getText().toString().trim());
+                Intent intent1= new Intent(ListApi.this,ListApi.class);
+                startActivity(intent1);
+                finish();
             }
         });
 
@@ -71,6 +72,9 @@ public class ListApi extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 PutApi(url, txtId.getText().toString().trim(), txtName.getText().toString().trim(), Integer.parseInt(txtAge.getText().toString().trim()), txtClass.getText().toString().trim());
+                Intent intent1= new Intent(ListApi.this,ListApi.class);
+                startActivity(intent1);
+                finish();
             }
         });
     }
@@ -127,36 +131,43 @@ public class ListApi extends AppCompatActivity {
         requestQueue.add(stringRequest);
     }
 
-    private ArrayList<User> GetArrayJson(String url){
-        ArrayList<User> list=null;
-        JsonArrayRequest jsonArrayRequest =
-                new JsonArrayRequest(url,
-                        new Response.Listener<JSONArray>() {
-                            @Override
-                            public void onResponse(JSONArray response) {
-                                for(int i=0; i<response.length(); i++){
-                                    try {
-                                        JSONObject object = (JSONObject) response.get(i);
-
-                                        System.out.println(object.toString());
-                                        User user=new User(object.getString("name"), object.getString("id"), object.getInt("age"), object.getString("class"));
-                                        list.add(user);
-                                    } catch (JSONException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            }
-                        }, new Response.ErrorListener() {
+    private void GetData(String url){
+        JsonArrayRequest jsonArrayRequest= new JsonArrayRequest(Request.Method.GET,url, null,
+                new Response.Listener<JSONArray>() {
                     @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(ListApi.this, "Error by get Json Array!", Toast.LENGTH_SHORT).show();
+                    public void onResponse(JSONArray response) {
+                        for (int i = 0; i < response.length(); i++) {
+                            try {
+                                JSONObject object =(JSONObject) response.get(i);
+                                User user = new User();
+                                user.setId(object.getString("id"));
+                                user.setName(object.getString("name"));
+                                user.setAge(object.getInt("age"));
+                                user.setIclass(object.getString("class"));
+                                System.out.println(user);
+                                listUser.add(user);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        buildRecyclerView();
                     }
-                });
-
-        RequestQueue requestQueue = Volley.newRequestQueue(this);
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(ListApi.this, "Error :(", Toast.LENGTH_SHORT).show();
+            }
+        });
+        RequestQueue requestQueue= Volley.newRequestQueue(this);
         requestQueue.add(jsonArrayRequest);
-        return list;
     }
 
+    private void buildRecyclerView() {
 
+        adapter = new UserAdater(listUser,ListApi.this);
+
+        LinearLayoutManager manager = new LinearLayoutManager(this);
+        rclView.setLayoutManager(manager);
+        rclView.setAdapter(adapter);
+    }
 }
